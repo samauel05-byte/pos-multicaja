@@ -88,6 +88,20 @@ public static class CatalogEndpoints
             return Results.Ok();
         });
 
+        // Retirar del catálogo conserva las referencias de ventas e inventario.
+        g.MapDelete("/products/{id:guid}", async (Guid id, AppDb db, CurrentUser cu, AuditService audit) =>
+        {
+            cu.Require(Perm.ProductsManage);
+            var p = await db.Products.FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("Producto no encontrado.");
+            if (p.Active)
+            {
+                p.Active = false;
+                audit.Log("product.delete", "product", p.Id, $"{p.Sku} {p.Name}: retirado del catálogo; historial conservado");
+                await db.SaveChangesAsync();
+            }
+            return Results.Ok(new { p.Id, p.Active });
+        });
+
         g.MapPost("/categories", async (NamedReq r, AppDb db, CurrentUser cu) =>
         {
             cu.Require(Perm.ProductsManage);
