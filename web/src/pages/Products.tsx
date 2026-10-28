@@ -6,9 +6,12 @@ import { money, num } from '../format'
 import type { Product } from '../types'
 
 export default function Products() {
-  const { boot, refreshBoot } = useSession(); const { push } = useToast()
+  const { boot, refreshBoot, can } = useSession(); const { push } = useToast()
   const [q, setQ] = useState('')
-  const { data, error, loading, reload } = useLoad<Product[]>(() => api.get(`/api/products?limit=300&q=${encodeURIComponent(q)}`), [])
+  const [showInactive, setShowInactive] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const { data, error, loading, reload } = useLoad<Product[]>(() => api.get(`/api/products?limit=300&q=${encodeURIComponent(q)}${showInactive ? '' : '&active=true'}`), [showInactive])
   const [edit, setEdit] = useState<Partial<Product> & { initialStock?: number } | null>(null)
   const [newCat, setNewCat] = useState('')
   const [creatingCategory, setCreatingCategory] = useState(false)
@@ -33,6 +36,17 @@ export default function Products() {
     finally { setSavingCategory(false) }
   }
 
+  const removeProduct = async () => {
+    if (!deleteTarget || deleting) return
+    setDeleting(true)
+    try {
+      await api.delete(`/api/products/${deleteTarget.id}`)
+      setDeleteTarget(null); push('ok', 'Producto eliminado del catálogo.')
+      await reload()
+    } catch (e) { push('err', errText(e)) }
+    finally { setDeleting(false) }
+  }
+
   const save = async () => {
     if (!edit) return
     try {
@@ -47,12 +61,18 @@ export default function Products() {
   return <div className="page">
     <h2>Productos</h2>
     <div className="toolbar"><input placeholder="Buscar nombre, SKU o código de barras" value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') reload() }} /><button onClick={reload}>Buscar</button>
-      <button className="primary" onClick={() => openEditor({ tracksStock: true, active: true })}>＋ Nuevo producto</button></div>
+      <button className="primary" onClick={() => openEditor({ tracksStock: true, active: true })}>＋ Nuevo producto</button>
+      <label className="check"><input type="checkbox" checked={showInactive} onChange={e => setShowInactive(e.target.checked)} /> Mostrar inactivos</label></div>
     {loading && <Loading />}{error ? <ErrorBox error={error} retry={reload} /> : null}
-    <table className="t hover"><thead><tr><th>SKU</th><th>Código</th><th>Nombre</th><th>Categoría</th><th className="r">Costo</th><th className="r">Precio</th><th>Imp.</th><th className="r">Existencia</th><th className="r">Mín.</th><th>Estado</th></tr></thead><tbody>
+    <table className="t hover"><thead><tr><th>SKU</th><th>Código</th><th>Nombre</th><th>Categoría</th><th className="r">Costo</th><th className="r">Precio</th><th>Imp.</th><th className="r">Existencia</th><th className="r">Mín.</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
       {data?.map(p => <tr key={p.id} onClick={() => openEditor(p)}><td>{p.sku}</td><td>{p.barcode}</td><td>{p.name}</td><td>{p.categoryName}</td><td className="r">{money(p.cost)}</td><td className="r">{money(p.price)}</td>
-        <td>{(p.taxRate * 100).toFixed(0)}%</td><td className={`r ${p.tracksStock && p.stock <= p.minStock ? 'bad-t' : ''}`}>{p.tracksStock ? `${num(p.stock)} ${p.unitAbbr}` : '—'}</td><td className="r">{num(p.minStock)}</td><td>{p.active ? 'Activo' : <span className="chip bad">Inactivo</span>}</td></tr>)}
+        <td>{(p.taxRate * 100).toFixed(0)}%</td><td className={`r ${p.tracksStock && p.stock <= p.minStock ? 'bad-t' : ''}`}>{p.tracksStock ? `${num(p.stock)} ${p.unitAbbr}` : '—'}</td><td className="r">{num(p.minStock)}</td><td>{p.active ? 'Activo' : <span className="chip bad">Inactivo</span>}</td><td>{p.active && can('products.manage') && <button type="button" className="bad-t" aria-label={`Eliminar ${p.name}`} onClick={e => { e.stopPropagation(); setDeleteTarget(p) }}>Eliminar</button>}</td></tr>)}
     </tbody></table>
+    {deleteTarget && <Modal title="Eliminar producto" onClose={deleting ? undefined : () => setDeleteTarget(null)}
+      footer={<><button disabled={deleting} onClick={() => setDeleteTarget(null)}>Cancelar</button><button className="bad-t" disabled={deleting} onClick={removeProduct}>{deleting ? 'Eliminando…' : 'Eliminar producto'}</button></>}>
+      <p>¿Eliminar <strong>{deleteTarget.name}</strong> ({deleteTarget.sku}) del catálogo activo?</p>
+      <p>Dejará de estar disponible para nuevas ventas. Su historial y sus existencias se conservarán. Puedes recuperarlo desde «Mostrar inactivos», editándolo y marcando «Activo».</p>
+    </Modal>}
     {edit && <Modal title={edit.id ? 'Editar producto' : 'Nuevo producto'} onClose={savingCategory ? undefined : () => setEdit(null)} wide footer={<><button disabled={savingCategory} onClick={() => setEdit(null)}>Cancelar</button><button className="primary" onClick={save} disabled={!edit.name || !edit.sku || savingCategory}>Guardar</button></>}>
       <div className="form2">
         <label>SKU / código interno<input value={edit.sku ?? ''} onChange={e => set('sku', e.target.value)} /></label>
