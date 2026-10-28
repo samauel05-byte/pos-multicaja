@@ -13,7 +13,7 @@ Los secretos se guardan en las variables de entorno de Vercel:
 
 No guardar estos valores en Git. Las credenciales iniciales solo se aplican cuando la base está vacía. Cambiar variables después no cambia la contraseña de un usuario existente.
 
-El contenedor desactiva datos demo y respaldos programados locales. El almacenamiento del contenedor es efímero. Los respaldos persistentes requieren una solución externa. Las migraciones EF Core y la inicialización se ejecutan al arrancar.
+El contenedor desactiva datos demo y respaldos programados locales. El almacenamiento del contenedor es efímero. Los respaldos persistentes requieren una solución externa. Las dos migraciones EF Core y la inicialización ya se aplicaron. En Vercel se configura `Database__MigrateOnStart=false` para evitar ejecutar migraciones en cada arranque de instancia. El historial está en `pos.__EFMigrationsHistory`: futuras migraciones deben usar explícitamente ese esquema y ejecutarse de forma controlada antes de publicar cambios que dependan de ellas. No activar las migraciones automáticas con el historial predeterminado de `public`, porque el arranque intentaría crear un historial que ya existe en `pos`.
 
 ## Verificación
 
