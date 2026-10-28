@@ -53,7 +53,7 @@ export default function Products() {
       {data?.map(p => <tr key={p.id} onClick={() => openEditor(p)}><td>{p.sku}</td><td>{p.barcode}</td><td>{p.name}</td><td>{p.categoryName}</td><td className="r">{money(p.cost)}</td><td className="r">{money(p.price)}</td>
         <td>{(p.taxRate * 100).toFixed(0)}%</td><td className={`r ${p.tracksStock && p.stock <= p.minStock ? 'bad-t' : ''}`}>{p.tracksStock ? `${num(p.stock)} ${p.unitAbbr}` : '—'}</td><td className="r">{num(p.minStock)}</td><td>{p.active ? 'Activo' : <span className="chip bad">Inactivo</span>}</td></tr>)}
     </tbody></table>
-    {edit && <Modal title={edit.id ? 'Editar producto' : 'Nuevo producto'} onClose={() => setEdit(null)} wide footer={<><button onClick={() => setEdit(null)}>Cancelar</button><button className="primary" onClick={save} disabled={!edit.name || !edit.sku || savingCategory}>Guardar</button></>}>
+    {edit && <Modal title={edit.id ? 'Editar producto' : 'Nuevo producto'} onClose={savingCategory ? undefined : () => setEdit(null)} wide footer={<><button disabled={savingCategory} onClick={() => setEdit(null)}>Cancelar</button><button className="primary" onClick={save} disabled={!edit.name || !edit.sku || savingCategory}>Guardar</button></>}>
       <div className="form2">
         <label>SKU / código interno<input value={edit.sku ?? ''} onChange={e => set('sku', e.target.value)} /></label>
         <label>Código de barras<input value={edit.barcode ?? ''} onChange={e => set('barcode', e.target.value)} /></label>
