@@ -15,7 +15,18 @@ builder.Host.UseWindowsService();   // permite ejecutarlo como Servicio de Windo
 
 // ---- Configuración por variables de entorno (ConnectionStrings__Db, Jwt__Key, Backup__*, Seed__*) ----
 var cfg = builder.Configuration;
-var connString = cfg.GetConnectionString("Db") ?? throw new InvalidOperationException("Falta ConnectionStrings__Db");
+// Plataformas (Render, Railway, Heroku…) entregan DATABASE_URL=postgres://usuario:clave@host:puerto/base; se convierte al formato de Npgsql.
+if (string.IsNullOrWhiteSpace(cfg.GetConnectionString("Db")) && Environment.GetEnvironmentVariable("DATABASE_URL") is { Length: > 0 } dbUrl)
+{
+    var uri = new Uri(dbUrl); var ui = uri.UserInfo.Split(':', 2);
+    cfg["ConnectionStrings:Db"] = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host, Port = uri.Port > 0 ? uri.Port : 5432, Database = uri.AbsolutePath.TrimStart('/'),
+        Username = Uri.UnescapeDataString(ui[0]), Password = ui.Length > 1 ? Uri.UnescapeDataString(ui[1]) : "",
+        SslMode = uri.Host is "localhost" or "127.0.0.1" ? Npgsql.SslMode.Prefer : Npgsql.SslMode.Require, TrustServerCertificate = true,
+    }.ConnectionString;
+}
+var connString = cfg.GetConnectionString("Db") is { Length: > 0 } cs0 ? cs0 : throw new InvalidOperationException("Falta ConnectionStrings__Db (o DATABASE_URL)");
 var jwtKey = cfg["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
 {

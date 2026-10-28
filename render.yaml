@@ -1,0 +1,30 @@
+# Blueprint de Render: servidor .NET (Docker) + PostgreSQL administrado.
+# Render > New > Blueprint > elija este repositorio. Las contraseñas se generan y se leen en el panel (Environment).
+services:
+  - type: web
+    name: pos-api
+    runtime: docker
+    plan: free              # el plan gratuito se "duerme" tras inactividad y no tiene disco persistente
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: pos-db, property: connectionString }
+      - key: Jwt__Key
+        generateValue: true
+      - key: Seed__Demo
+        value: "true"        # datos FICTICIOS para probar; ponga "false" para un negocio real
+      - key: Seed__AdminPassword
+        generateValue: true
+      - key: Seed__DemoPassword
+        generateValue: true
+      - key: Seed__DemoPin
+        generateValue: true
+      - key: Backup__Passphrase
+        generateValue: true
+      - key: Backup__AutoEnabled
+        value: "false"       # sin disco persistente los respaldos locales se pierden; actívelo con un disco
+databases:
+  - name: pos-db
+    plan: free              # la base gratuita de Render caduca (~30 días); use un plan de pago para uso real
+    databaseName: pos
+    user: pos_app

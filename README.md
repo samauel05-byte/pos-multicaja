@@ -25,5 +25,6 @@ Usuarios demo (solo con `Seed__Demo=true`; **no usar en producción**): `admin /
 | [docs/ESTADO.md](docs/ESTADO.md) | **Qué está terminado, qué está pendiente, qué se probó y qué NO se verificó** |
 | [docs/INSTALACION-WINDOWS-LAN.md](docs/INSTALACION-WINDOWS-LAN.md) | Instalar el servidor en Windows, conectar cajas por LAN, HTTPS local, respaldos y restauración |
 | [docs/IMPRESORAS.md](docs/IMPRESORAS.md) | Integración de impresoras térmicas y lista de validación con hardware |
+| [docs/DESPLIEGUE-NUBE.md](docs/DESPLIEGUE-NUBE.md) | Probarlo en la nube: API en Render + interfaz en Vercel (sin verificar en vivo) |
 | [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Decisiones, reglas de consistencia y cómo se implementan, modelo de datos, API |
 | [docs/REFERENCIA-VSG.md](docs/REFERENCIA-VSG.md) | Qué funciones documenta públicamente el producto de referencia y cuáles son propuestas nuestras |

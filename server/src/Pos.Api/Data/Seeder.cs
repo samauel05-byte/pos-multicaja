@@ -47,12 +47,14 @@ public static class Seeder
             var tax0 = await db.TaxRates.FirstAsync(t => t.Rate == 0m);
 
             var admin = await db.Users.FirstAsync(u => u.Username == "admin");
+            // Contraseñas/PIN de demostración configurables (en un servidor público NO deje los valores por defecto).
+            var demoPass = cfg["Seed:DemoPassword"] ?? "Demo1234!"; var demoPin = cfg["Seed:DemoPin"] ?? "1234";
             var demoAdmin = cfg["Seed:AdminPassword"] ?? "Admin1234!";
-            admin.PasswordHash = PasswordHasher.Hash(demoAdmin); admin.PinHash = PasswordHasher.Hash("0000");
+            admin.PasswordHash = PasswordHasher.Hash(demoAdmin); admin.PinHash = PasswordHasher.Hash(cfg["Seed:AdminPin"] ?? "0000");
             db.Users.AddRange(
-                new AppUser { Username = "supervisor", FullName = "Sara Supervisor (demo)", Role = Role.Supervisor, PasswordHash = PasswordHasher.Hash("Demo1234!"), PinHash = PasswordHasher.Hash("1234"), BranchId = branch.Id },
-                new AppUser { Username = "cajero1", FullName = "Carlos Cajero (demo)", Role = Role.Cashier, PasswordHash = PasswordHasher.Hash("Demo1234!"), BranchId = branch.Id },
-                new AppUser { Username = "cajero2", FullName = "Carmen Cajera (demo)", Role = Role.Cashier, PasswordHash = PasswordHasher.Hash("Demo1234!"), BranchId = branch.Id });
+                new AppUser { Username = "supervisor", FullName = "Sara Supervisor (demo)", Role = Role.Supervisor, PasswordHash = PasswordHasher.Hash(demoPass), PinHash = PasswordHasher.Hash(demoPin), BranchId = branch.Id },
+                new AppUser { Username = "cajero1", FullName = "Carlos Cajero (demo)", Role = Role.Cashier, PasswordHash = PasswordHasher.Hash(demoPass), BranchId = branch.Id },
+                new AppUser { Username = "cajero2", FullName = "Carmen Cajera (demo)", Role = Role.Cashier, PasswordHash = PasswordHasher.Hash(demoPass), BranchId = branch.Id });
 
             var cats = new[] { "Bebidas", "Despensa", "Lácteos", "Limpieza", "Snacks" }.Select(n => new Category { Name = n }).ToList();
             db.Categories.AddRange(cats);
