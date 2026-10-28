@@ -1,0 +1,8 @@
+bin/
+obj/
+node_modules/
+server/src/Pos.Api/wwwroot/
+backups/
+*.pfx
+*.posbak
+.env
