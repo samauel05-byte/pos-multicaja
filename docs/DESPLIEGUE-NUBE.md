@@ -4,17 +4,17 @@
 
 ## Qué corre dónde
 ```
-Navegador ──► Vercel (interfaz estática) ──/api/*──► Render (contenedor .NET) ──► PostgreSQL de Render
+Navegador ──► Vercel (interfaz estática) ──/api/*──► Render (contenedor .NET) ──► PostgreSQL de Supabase
 ```
 Vercel no ejecuta .NET; solo sirve la interfaz y **reenvía `/api/*`** a Render (así el navegador ve un solo origen). La API de Render **también sirve la misma interfaz**, así que la URL de Render ya funciona sola; Vercel es opcional.
 
 ## 1. Render (servidor + base de datos)
-1. https://render.com → *New → Blueprint* → conecte el repositorio `samauel05-byte/pos-multicaja` (rama `main`). Render lee `render.yaml` y crea `pos-api` (Docker) y `pos-db` (PostgreSQL).
+1. https://render.com → *New → Blueprint* → conecte el repositorio `samauel05-byte/pos-multicaja` (rama `main`). Render lee `render.yaml` y crea `pos-api` (Docker). **No crea base de datos:** Render pedirá el valor de `DATABASE_URL`; pegue la cadena de conexión de Supabase (*Project Settings → Database → Connection string → Session pooler*, puerto 5432, con la contraseña real). Las migraciones y datos iniciales se aplican solos al arrancar.
 2. Espere el primer *build* (varios minutos). Al terminar, la URL será `https://pos-api-XXXX.onrender.com`.
 3. En *pos-api → Environment* lea las contraseñas generadas: `Seed__AdminPassword` (usuario `admin`), `Seed__DemoPassword` (usuarios `supervisor`, `cajero1`, `cajero2`), `Seed__DemoPin` (PIN de supervisor). Si la base ya existía antes de cambiarlas, no se actualizan.
 4. Pruebe `https://pos-api-XXXX.onrender.com/api/health` y luego abra la URL raíz.
 
-**Límites del plan gratuito:** el servicio se duerme tras ~15 min sin tráfico (primera petición lenta); la base gratuita **caduca** a los ~30 días; no hay disco persistente, por eso los respaldos automáticos van desactivados. Para uso real: plan de pago + disco + `Backup__AutoEnabled=true` + copiar los `.posbak` fuera.
+**Límites del plan gratuito:** el servicio se duerme tras ~15 min sin tráfico (primera petición lenta); no hay disco persistente, por eso los respaldos automáticos van desactivados. Para uso real: plan de pago + disco + `Backup__AutoEnabled=true` + copiar los `.posbak` fuera.
 
 **Importante:** `Seed__Demo=true` carga datos ficticios. En un negocio real póngalo en `false` *antes del primer arranque* y use datos reales. Una URL pública con datos demo es solo para pruebas: no registre información real.
 
